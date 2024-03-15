@@ -18,8 +18,8 @@ log_message "CPU2 Temp: $CPU2_TEMP"
 
 
 # Fan speed thresholds (adjust these values as needed)
-LOW_TEMP_THRESHOLD=44
-HIGH_TEMP_THRESHOLD=55
+LOW_TEMP_THRESHOLD=48
+HIGH_TEMP_THRESHOLD=60
 
 # Check if CPU temperatures exceed thresholds and adjust fan speed
 if [ "$CPU1_TEMP" -ge "$HIGH_TEMP_THRESHOLD" ] || [ "$CPU2_TEMP" -ge "$HIGH_TEMP_THRESHOLD" ]; then
