@@ -1,0 +1,10 @@
+[Unit]
+Description=CPU Temperature Monitor Timer
+
+[Timer]
+OnUnitActiveSec=1m
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target
+
