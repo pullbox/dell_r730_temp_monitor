@@ -33,8 +33,9 @@ do
  then
   CPU_TEMP=$NEW_CPU2_TEMP
  fi 
-  log_message "CPU1 Temp: $NEW_CPU1_TEMP"
-  log_message "CPU2 Temp: $NEW_CPU2_TEMP"
+  
+ # Log current temperature
+ log_message "CPU Temp: $NEW_CPU1_TEMP | $NEW_CPU2_TEMP"
 
  # Find the fan speed for the current Temp
 
