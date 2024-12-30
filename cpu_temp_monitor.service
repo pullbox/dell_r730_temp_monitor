@@ -3,8 +3,7 @@ Description=CPU Temperature Monitor Service
 After=network.target
 
 [Service]
-Type=simple
-ExecStart=/home/daniel/dell_r730_temp_monitor/cpu_temp_monitor.sh
+ExecStart=/home/daniel/dell_r730_temp_monitor/cpu_temp_monitor_new.sh
 Restart=always
 RestartSec=5s
 StartLimitInterval=0
