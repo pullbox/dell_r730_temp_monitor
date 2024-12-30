@@ -84,7 +84,7 @@ convert_fan_speed_to_percent() {
 FAN_SPEED_TABLE=(
   "0 40 0x0f" # 15% for temperatures 0-40°C
   "41 50 0x14" # 20% for temperatures 41-50°C
-  "51 55 0x23" # 25% for temperatures 51-55°C
+  "51 55 0x19" # 25% for temperatures 51-55°C
   "56 58 0x1E" # 30% for temperatures 56-58°C
   "59 60 0x28" # 35% for temperatures 59-60°C
   "61 65 0x2D" # 45% for temperatures 61-70°C
