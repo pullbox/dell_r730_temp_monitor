@@ -150,11 +150,11 @@ midnight_fan_speed &
 while true; do
   read cpu1_temp cpu2_temp <<< $(get_cpu_temps)
   if [[ -n $cpu1_temp && -n $cpu2_temp ]]; then
-    avg_temp=$(( (cpu1_temp + cpu2_temp) / 2 ))
-    fan_speed=$(get_fan_speed_from_table "$avg_temp")
+    max_temp=$(( cpu1_temp > cpu2_temp ? cpu1_temp : cpu2_temp ))
+    fan_speed=$(get_fan_speed_from_table "$max_temp")
     fan_speed_percent=$(convert_fan_speed_to_percent "$fan_speed")
-    echo "CPU1: $cpu1_temp°C, CPU2: $cpu2_temp°C -> Avg: $avg_temp°C -> Fan Speed: $fan_speed ($fan_speed_percent)"
-    log_message "CPU1 Temp: $cpu1_temp°C, CPU2 Temp: $cpu2_temp°C -> Avg Temp: $avg_temp°C -> Fan Speed: $fan_speed ($fan_speed_percent)"
+    echo "CPU1: $cpu1_temp°C, CPU2: $cpu2_temp°C -> MAx: $max_temp°C -> Fan Speed: $fan_speed ($fan_speed_percent)"
+    log_message "CPU1 Temp: $cpu1_temp°C, CPU2 Temp: $cpu2_temp°C -> Max Temp: $max_temp°C -> Fan Speed: $fan_speed ($fan_speed_percent)"
     $IPMITOOL_CMD $fan_speed   
   else
     echo "Failed to read CPU temperature."
