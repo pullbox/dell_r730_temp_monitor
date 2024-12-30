@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Configuration
-CPU_TEMP_SENSOR="Core 0" # Adjust based on your sensors output
 MAX_TEMP=80              # Maximum temperature in Celsius
 MIN_TEMP=30              # Minimum temperature in Celsius
 IPMITOOL_CMD="ipmitool raw 0x30 0x30 0x02 0xff" # IPMI base command
@@ -24,6 +23,39 @@ set_automatic_fan_control() {
   ipmitool raw 0x30 0x30 0x01 0x01
 }
 
+
+# Set fan speed to a specific percentage
+set_fan_speed() {
+  local speed=$1
+  $IPMITOOL_CMD $speed
+}
+
+# Convert hex fan speed to percentage
+convert_fan_speed_to_percent() {
+  case $1 in
+    0x05) echo "5%" ;;
+    0x0A) echo "10%" ;;
+    0x0F) echo "15%" ;;
+    0x14) echo "20%" ;;
+    0x19) echo "25%" ;;
+    0x1E) echo "30%" ;;
+    0x23) echo "35%" ;;
+    0x28) echo "40%" ;;
+    0x2D) echo "45%" ;;
+    0x32) echo "50%" ;;
+    0x37) echo "55%" ;;
+    0x3C) echo "60%" ;;
+    0x41) echo "65%" ;;
+    0x46) echo "70%" ;;
+    0x4B) echo "75%" ;;
+    0x50) echo "80%" ;;
+    0x55) echo "85%" ;;
+    0x5A) echo "90%" ;;
+    0x5F) echo "95%" ;;
+    0x64) echo "100%" ;;
+    *) echo "Unknown" ;;
+  esac
+}
 
 # Fan Speed (%)	Hex Value
 # 5%	0x05
@@ -50,13 +82,14 @@ set_automatic_fan_control() {
 # Fan speed table based on temperature range
 # Format: "MinTemp MaxTemp FanSpeed"
 FAN_SPEED_TABLE=(
-  "0 40 0x0f 15%" # 15% for temperatures 0-40°C
-  "41 50 0x14 20%" # 20% for temperatures 41-50°C
-  "51 55 0x23 25%" # 25% for temperatures 51-55°C
-  "56 58 0x28 35%" # 35% for temperatures 56-58°C
-  "59 60 0x32 50%" # 50% for temperatures 59-60°C
-  "61 70 0x50 80%" # 80% for temperatures 61-70°C
-  "71 80 0x64 100%" # 100% for temperatures 71-80°C
+  "0 40 0x0f" # 15% for temperatures 0-40°C
+  "41 50 0x14" # 20% for temperatures 41-50°C
+  "51 55 0x23" # 25% for temperatures 51-55°C
+  "56 58 0x1E" # 30% for temperatures 56-58°C
+  "59 60 0x28" # 35% for temperatures 59-60°C
+  "61 65 0x2D" # 45% for temperatures 61-70°C
+  "66 70 0x50" # 80% for temperatures 61-70°C
+  "71 80 0x64" # 100% for temperatures 71-80°C
 )
 
 # Function to get the appropriate fan speed from the table
@@ -66,7 +99,6 @@ get_fan_speed_from_table() {
     local min_temp=$(echo "$entry" | awk '{print $1}')
     local max_temp=$(echo "$entry" | awk '{print $2}')
     local fan_speed=$(echo "$entry" | awk '{print $3}')
-    local speed=$(echo "$entry" | awk '{print $4}')
     if (( temp >= min_temp && temp <= max_temp )); then
       echo "$fan_speed"
       log_message "Speed: $fan_speed $speed" 
@@ -89,8 +121,30 @@ get_cpu_temps() {
 trap set_automatic_fan_control EXIT
 
 
+# Function to set fan speed to 50% at midnight for 1 minute
+midnight_fan_speed() {
+  while true; do
+    current_time=$(date +"%H:%M")
+    if [[ "$current_time" == "00:00" ]]; then
+      log_message "Setting fan speed to 40% for 1 minute at midnight."
+      set_fan_speed 0x28 # 40%
+      sleep 60
+      log_message "Resuming normal fan control after midnight adjustment."
+    fi
+    sleep 1
+  done
+}
+
+
 # Main loop
 set_manual_fan_control # Enable manual control at the start
+log_message "Fan control set to manual mode"
+
+
+
+# Start the midnight fan speed adjustment in the background
+midnight_fan_speed &
+
 
 # Main loop
 while true; do
@@ -98,8 +152,9 @@ while true; do
   if [[ -n $cpu1_temp && -n $cpu2_temp ]]; then
     avg_temp=$(( (cpu1_temp + cpu2_temp) / 2 ))
     fan_speed=$(get_fan_speed_from_table "$avg_temp")
-    echo "CPU1: $cpu1_temp°C, CPU2: $cpu2_temp°C -> Avg: $avg_temp°C -> Fan Speed: $fan_speed"
-    log_message "CPU1 Temp: $cpu1_temp°C, CPU2 Temp: $cpu2_temp°C -> Avg Temp: $avg_temp°C -> Fan Speed: $fan_speed"
+    fan_speed_percent=$(convert_fan_speed_to_percent "$fan_speed")
+    echo "CPU1: $cpu1_temp°C, CPU2: $cpu2_temp°C -> Avg: $avg_temp°C -> Fan Speed: $fan_speed ($fan_speed_percent)"
+    log_message "CPU1 Temp: $cpu1_temp°C, CPU2 Temp: $cpu2_temp°C -> Avg Temp: $avg_temp°C -> Fan Speed: $fan_speed ($fan_speed_percent)"
     $IPMITOOL_CMD $fan_speed   
   else
     echo "Failed to read CPU temperature."
